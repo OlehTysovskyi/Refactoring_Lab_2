@@ -1,6 +1,9 @@
 export class OurDate {
 
     constructor(date) {
+        if (!(date instanceof Date)) {
+            throw new Error("Invalid date provided");
+        }
         this.date = date;
     }
 
@@ -10,7 +13,7 @@ export class OurDate {
     }
 
     _getMonth() {
-        return 1 + this.date.getMonth();
+        return this.date.getMonth() + 1;
     }
 
     _getDay() {
