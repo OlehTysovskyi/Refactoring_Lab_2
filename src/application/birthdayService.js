@@ -56,7 +56,7 @@ export class BirthdayService {
         };
     }
 
-    // використовується для тестування
+    // Використовується для тестування
     _sendMessage(msg, transport) {
         transport.sendMail(msg, (err) => {
             if (err) {
