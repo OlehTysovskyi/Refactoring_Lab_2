@@ -1,15 +1,17 @@
-import nodemailer from "nodemailer";
-import {GreetingMessage} from "../core/greetingMessage";
+import { GreetingMessage } from "../core/greetingMessage";
 
 export class BirthdayService {
 
-    constructor(employeeRepository) {
+    constructor(employeeRepository, mailerTransporter) {
+        // Вводимо залежність для транспортерів у конструкторі
         this.employeesRepository = employeeRepository;
+        this.mailerTransporter = mailerTransporter || null;
     }
 
-    sendGreetings(date, smtpHost, smtpPort, sender) {
-        this._send(this._greetingMessagesFor(this._employeesHavingBirthday(date)),
-            smtpHost, smtpPort, sender);
+    sendGreetings(date, sender) {
+        const employees = this._employeesHavingBirthday(date);
+        const messages = this._greetingMessagesFor(employees);
+        this._send(messages, sender);
     }
 
     _greetingMessagesFor(employees) {
@@ -20,39 +22,46 @@ export class BirthdayService {
         return this.employeesRepository.whoseBirthdayIs(today);
     }
 
-    _send(messages, smtpHost, smtpPort, sender) {
+    _send(messages, sender) {
         for (const message of messages) {
             const recipient = message.getTo();
             const body = message.getText();
             const subject = message.getSubject();
-            this._sendTheMessage(smtpHost, smtpPort, sender, subject, body, recipient);
+            this._sendTheMessage(sender, subject, body, recipient);
         }
     }
 
-    _sendTheMessage(smtpHost, smtpPort, sender, subject, body, recipient) {
-        // Create a mail session
-        const transport = nodemailer.createTransport({
-            host: smtpHost,
-            port: smtpPort,
-        })
+    _sendTheMessage(sender, subject, body, recipient) {
+        // Якщо транспортер не передано, то можемо використати дефолтний
+        const transport = this.mailerTransporter || this._createDefaultTransport();
 
-        // Construct the message
         const msg = {
             from: sender,
             to: recipient,
             subject: subject,
-            text: body
+            text: body,
         };
 
-        // Send the message
         this._sendMessage(msg, transport);
     }
 
-    // used for testing :-(
-    _sendMessage(msg, transport) {
-        transport.sendMail(msg, (err) => {
-            if (err) throw new Error("not send");
-        });
+    // Створення дефолтного транспортеру
+    _createDefaultTransport() {
+        return {
+            sendMail: (msg, callback) => {
+                // Можна замінити на реальний транспорт для відправки листів
+                console.log('Default transport: Sending email...', msg);
+                callback();
+            }
+        };
     }
 
+    // використовується для тестування
+    _sendMessage(msg, transport) {
+        transport.sendMail(msg, (err) => {
+            if (err) {
+                throw new Error("not sent");
+            }
+        });
+    }
 }

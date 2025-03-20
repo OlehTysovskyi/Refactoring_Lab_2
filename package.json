@@ -29,5 +29,8 @@
   },
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "dependencies": {
+    "dayjs": "^1.11.13"
+  }
 }
